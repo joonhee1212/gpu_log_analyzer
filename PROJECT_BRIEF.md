@@ -1,11 +1,29 @@
 # GPU Log Analyzer — Project Notes
 
+## Current status
+
+Full pipeline is complete and working. Paused as of 2026-07-01.
+
+**What's done:**
+- Parser — ISO8601, syslog, dmesg timestamp formats; burst grouping; `message repeated` collapsing; recurrence detection across files
+- Classifier — enriches each Xid with name/severity/category/action from reference table; unknown codes fall back to key `0`
+- Reporter — grouped by GPU, chronological, inline `[RECURRING xN]` tags, recurrence summary at bottom
+- CLI — `gpu_log_analyzer` entry point; multi-file input; `--output` flag
+- Reference table — 67 real Xid codes + fallback, sourced from NVIDIA's official Xid Catalog (see `data/nvidia_xid_catalog_attribution.md`)
+- Synthetic log generator — `gpu_log_generator`; single-code and kitchen-sink modes; all three timestamp formats
+- Test suite — 36 tests passing; covers parser, classifier, all fixture formats, INCIDENT_GAP_SECS boundaries, recurrence detection, real sample regression
+- Sample data — `samples/real/` (2 real incident logs), `samples/synthetic/` (6 generated logs)
+- README, acknowledgments, and attribution all in place
+
+**Known open items (not urgent):**
+- dmesg-only files can't split multiple incidents — dmesg uptime floats bypass the gap detector; fix is tied to live streaming support
+- Plain text only — no `--format md` or `--format html` output option yet
+- No live streaming — `--follow` / `dmesg -w` mode not implemented
+
 ## Category taxonomy
 
 Categories used in `data/xid_reference.json`:
 
-| Category | Description | Example Xids |
-|---|---|---|
 | Category | Description | Example Xids |
 |---|---|---|
 | `memory_ecc` | ECC errors, row remapping, DRAM/SRAM faults | 48, 63, 64, 92, 94, 95, 140, 171, 172 |
