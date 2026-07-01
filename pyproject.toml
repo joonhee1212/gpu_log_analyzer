@@ -11,6 +11,10 @@ dependencies = []
 
 [project.scripts]
 gpu-log-analyzer = "gpu_log_analyzer.cli:main"
+gpu-log-generator = "gpu_log_analyzer.generator:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
 
 [tool.setuptools.packages.find]
 where = ["."]

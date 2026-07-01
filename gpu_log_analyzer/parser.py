@@ -31,9 +31,11 @@ def _strip_prefix(line: str) -> tuple[str, str] | tuple[None, None]:
 
 
 def _parse_ts_for_gap(ts: str) -> datetime | None:
-    # only used internally to detect whether same-PCI Xids are in the same burst
+    # only used internally to detect whether same-PCI Xids are in the same burst.
+    # always return a naive datetime so mixed-format files (ISO8601 + syslog) don't
+    # crash when subtracting an aware datetime from a naive one.
     try:
-        return datetime.fromisoformat(ts)
+        return datetime.fromisoformat(ts).replace(tzinfo=None)
     except ValueError:
         pass
     try:
@@ -130,8 +132,10 @@ def parse_file(path: str | Path) -> list[Incident]:
                     gap = abs((parsed_ts - last_ts).total_seconds())
                     same_incident = gap <= INCIDENT_GAP_SECS
                 else:
-                    # can't measure the gap (e.g. syslog format, same second) — assume same burst
-                    same_incident = True
+                    # can't compute a gap — at least one side is unparseable (e.g. dmesg
+                    # uptime following a syslog burst). only treat as same burst if NEITHER
+                    # side has timing info; if one is parseable and the other isn't, play safe.
+                    same_incident = (last_ts is None and parsed_ts is None)
 
             if not same_incident:
                 if current_incident:
