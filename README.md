@@ -197,3 +197,9 @@ Up next:
 - **Markdown / HTML report output** — `--format md` or `--format html` flag
 - **Live dmesg streaming** — `--follow` mode; also fixes dmesg-only multi-incident gap detection
 - **`nvidia-smi` correlation** — pair Xid 154 (recovery action) with live `nvidia-smi` output to surface the actual recovery state
+
+---
+
+## Acknowledgments
+
+This project was designed and built with assistance from [Claude](https://claude.ai) (Anthropic) — architecture discussion, parsing strategy, and implementation via Claude Code. The Xid reference data is derived from [NVIDIA's official documentation](https://docs.nvidia.com/deploy/xid-errors/index.html).
