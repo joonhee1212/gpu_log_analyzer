@@ -1,0 +1,16 @@
+2026-04-15T09:00:00.000000-06:00 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-e60922ca-8aba-63ed-64d9-4a354580711b
+2026-04-15T09:00:00.000775-06:00 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+2026-04-15T09:00:00.001255-06:00 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 80, BAR1 mapping error
+2026-04-15T09:00:00.001850-06:00 gpu-node-01 kernel: NVRM: GPU 0000:01:00.0: GPU has fallen off the bus.
+2026-04-15T09:00:00.002463-06:00 gpu-node-01 kernel: NVRM: GPU 0000:01:00.0: GPU serial number is 0.
+2026-04-15T09:00:00.002905-06:00 gpu-node-01 kernel: NVRM: GPU0 krcRcAndNotifyAllChannels_IMPL: RC all channels for critical error 80.
+2026-04-15T09:00:00.003180-06:00 gpu-node-01 kernel: NVRM: GPU0 _threadNodeCheckTimeout: API_GPU_ATTACHED_SANITY_CHECK failed!
+2026-04-15T09:00:00.003862-06:00 gpu-node-01 kernel: message repeated 11 times: [ NVRM: GPU0 _threadNodeCheckTimeout: API_GPU_ATTACHED_SANITY_CHECK failed!]
+2026-04-15T09:00:00.003967-06:00 gpu-node-01 kernel: NVRM: GPU0 _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 78 sequence 1747!
+2026-04-15T09:00:00.004415-06:00 gpu-node-01 kernel: NVRM: GPU0 _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 78 sequence 1748!
+2026-04-15T09:00:00.004712-06:00 gpu-node-01 kernel: NVRM:     entry function                     sequence data0              data1              ts_start           ts_end             duration during_incomplete_rpc
+2026-04-15T09:00:00.004935-06:00 gpu-node-01 kernel: NVRM:      0    4099 POST_EVENT                     0 0x00000000000000a2 0x0000000000000000 0x000649dd5d9881fc 0x000649dd5d988210     20us  
+2026-04-15T09:00:00.005527-06:00 gpu-node-01 kernel: NVRM:     -1    4124 GSP_LOCKDOWN_NOTICE            0 0x0000000000000000 0x0000000000000000 0x000649dd5cc9224e 0x000649dd5cc9224e           
+2026-04-15T09:00:00.006153-06:00 gpu-node-01 kernel: nvidia-modeset: ERROR: GPU:0: Failed to query display engine channel state: 0x0000ca7e:6:0:0x0000000f
+2026-04-15T09:00:00.006218-06:00 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 154, GPU recovery action changed from 0x0 (None) to 0x1 (GPU Reset Required)
+2026-04-15T09:00:00.006904-06:00 gpu-node-01 kernel: NVRM: GPU0 nvAssertFailedNoLog: Assertion failed: (status == NV_OK) || (status == NV_ERR_GPU_IN_FULLCHIP_RESET) @ rs_server.c:259

@@ -1,0 +1,5 @@
+Apr 15 09:00:00 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-6c3a50e8-ce5a-e5b9-c1e9-7f66ded77f2b
+Apr 15 09:00:00 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+Apr 15 09:00:00 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 145, NVLink5 NON_FATAL link event on link 10, subcode NETIR_LINK_EVT
+Apr 15 09:00:00 gpu-node-01 kernel: NVRM: GPU0 NVLink: link 10 transitioned to fault state
+Apr 15 09:00:00 gpu-node-01 kernel: NVRM: GPU0 NVLink: DLPL error subcode 0x00f0 on link 10

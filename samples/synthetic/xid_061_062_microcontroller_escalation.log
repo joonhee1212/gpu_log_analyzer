@@ -1,0 +1,7 @@
+[142.881000] NVRM: GPU at PCI:0000:01:00: GPU-878b28dd-e00e-a496-8d73-90c52c8a2180
+[142.881620] NVRM: GPU Board Serial Number: 0
+[142.882103] NVRM: Xid (PCI:0000:01:00): 61, internal micro-controller error
+[142.882897] NVRM: GPU0 error context for Xid 61
+
+[154.883111] NVRM: Xid (PCI:0000:01:00): 62, internal micro-controller halt
+[154.883291] NVRM: GPU0 error context for Xid 62

@@ -1,0 +1,40 @@
+2026-04-15T09:00:00.000000-06:00 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+2026-04-15T09:00:00.000233-06:00 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+2026-04-15T09:00:00.000518-06:00 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 6, pid=17281, name=pt_main_thread, MMU fault @ 0xc28753f8
+2026-04-15T09:00:00.000825-06:00 gpu-node-01 kernel: NVRM: GPU0 error context for Xid 6
+
+Apr 15 13:29:12 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+Apr 15 13:29:12 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+Apr 15 13:29:12 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 38, driver firmware error
+Apr 15 13:29:12 gpu-node-01 kernel: NVRM: GPU0 error context for Xid 38
+
+[35926.884793] NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+[35926.885047] NVRM: GPU Board Serial Number: 0
+[35926.885528] NVRM: Xid (PCI:0000:01:00): 65, pid=48331, name=cuda_app, video processor exception
+[35926.886180] NVRM: GPU0 error context for Xid 65
+
+2026-04-15T23:20:38.001621-06:00 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+2026-04-15T23:20:38.002068-06:00 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+2026-04-15T23:20:38.002816-06:00 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 68, NVDEC error
+2026-04-15T23:20:38.003338-06:00 gpu-node-01 kernel: NVRM: GPU0 error context for Xid 68
+
+Apr 16 01:58:23 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+Apr 16 01:58:23 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+Apr 16 01:58:23 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 73, NVENC error
+Apr 16 01:58:23 gpu-node-01 kernel: NVRM: GPU0 error context for Xid 73
+
+[80214.890802] NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+[80214.891175] NVRM: GPU Board Serial Number: 0
+[80214.891637] NVRM: Xid (PCI:0000:01:00): 94, contained ECC error
+[80214.892258] NVRM: GPU0 ECC error detected in DRAM
+
+2026-04-16T12:06:45.004064-06:00 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+2026-04-16T12:06:45.004322-06:00 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+2026-04-16T12:06:45.004743-06:00 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 145, NVLink5 NON_FATAL link event on link 2, subcode NETIR_LINK_EVT
+2026-04-16T12:06:45.005266-06:00 gpu-node-01 kernel: NVRM: GPU0 NVLink: link 8 transitioned to fault state
+2026-04-16T12:06:45.005936-06:00 gpu-node-01 kernel: NVRM: GPU0 NVLink: DLPL error subcode 0x0065 on link 8
+
+Apr 16 13:34:46 gpu-node-01 kernel: NVRM: GPU at PCI:0000:01:00: GPU-9974d75b-3338-24fe-6179-0134676b1b69
+Apr 16 13:34:46 gpu-node-01 kernel: NVRM: GPU Board Serial Number: 0
+Apr 16 13:34:46 gpu-node-01 kernel: NVRM: Xid (PCI:0000:01:00): 6, pid=15144, name=pt_main_thread, MMU fault @ 0x2d0fd6d9
+Apr 16 13:34:46 gpu-node-01 kernel: NVRM: GPU0 error context for Xid 6
