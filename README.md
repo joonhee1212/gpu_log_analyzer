@@ -1,4 +1,4 @@
-# gpu-log-analyzer
+# gpu_log_analyzer
 
 Parse NVIDIA GPU error logs, classify Xid error codes, and produce a human-readable diagnostic report — instead of just grepping raw codes, it tells you what the error means and what to do about it.
 
@@ -22,30 +22,30 @@ Built on real `nvidia-bug-report.log` samples from a recurring Xid 79 ("GPU has 
 Requires Python 3.9+, no third-party dependencies.
 
 ```bash
-git clone https://github.com/joonhee1212/gpu-log-analyzer.git
-cd gpu-log-analyzer
+git clone https://github.com/joonhee1212/gpu_log_analyzer.git
+cd gpu_log_analyzer
 pip install -e .
 ```
 
-After install, the `gpu-log-analyzer` command is available on your PATH.
+After install, the `gpu_log_analyzer` command is available on your PATH.
 
 ---
 
 ## Usage
 
 ```
-gpu-log-analyzer LOG [LOG ...] [--output FILE] [--xid-ref FILE]
+gpu_log_analyzer LOG [LOG ...] [--output FILE] [--xid-ref FILE]
 ```
 
 ```bash
 # analyze one or more log files, print to stdout
-gpu-log-analyzer incident1.log incident2.log
+gpu_log_analyzer incident1.log incident2.log
 
 # write report to a file instead
-gpu-log-analyzer incident1.log incident2.log --output report.txt
+gpu_log_analyzer incident1.log incident2.log --output report.txt
 
 # use a custom xid_reference.json (e.g. with more codes added)
-gpu-log-analyzer dmesg.log --xid-ref my_xid_ref.json
+gpu_log_analyzer dmesg.log --xid-ref my_xid_ref.json
 ```
 
 You can also run it without installing:
@@ -61,7 +61,7 @@ python -m gpu_log_analyzer.cli incident1.log incident2.log
 Running against the two real sample logs included in `samples/real/`:
 
 ```
-$ gpu-log-analyzer samples/real/incident1_first_occurrence.log samples/real/incident2_recurrence.log
+$ gpu_log_analyzer samples/real/incident1_first_occurrence.log samples/real/incident2_recurrence.log
 
 GPU Log Analysis Report
 Source files: 2
@@ -148,8 +148,8 @@ Error categories: `memory_ecc`, `illegal_memory_access`, `gpu_fallen_off_bus`, `
 
 ```
 gpu_log_analyzer/
-  cli.py          # gpu-log-analyzer entry point, wires parse -> classify -> report
-  generator.py    # gpu-log-generator entry point, synthetic log generation
+  cli.py          # gpu_log_analyzer entry point, wires parse -> classify -> report
+  generator.py    # gpu_log_generator entry point, synthetic log generation
   parser.py       # regex + state machine, produces Incident objects
   classifier.py   # looks up each Xid in xid_reference.json
   reporter.py     # formats ClassifiedIncident list as plain text
@@ -188,8 +188,8 @@ Done:
 - [x] Parser — handles ISO8601, syslog, and dmesg timestamp formats; groups multi-line bursts into incidents; collapses `message repeated N times`; detects recurrence across files
 - [x] Classifier — enriches each Xid with name/severity/category/action from the reference table; unknown codes fall back gracefully
 - [x] Report generator — grouped by GPU, sorted chronologically, recurrence flagged inline and summarized at the bottom
-- [x] CLI — `gpu-log-analyzer` entry point; multi-file input; `--output` flag
-- [x] Synthetic log generator — `gpu-log-generator` entry point; single-code and kitchen-sink modes; all three timestamp formats; realistic noise/burst structure
+- [x] CLI — `gpu_log_analyzer` entry point; multi-file input; `--output` flag
+- [x] Synthetic log generator — `gpu_log_generator` entry point; single-code and kitchen-sink modes; all three timestamp formats; realistic noise/burst structure
 - [x] Test suite — 32 tests covering parser, classifier, all fixture formats, recurrence detection, and real sample regression
 
 Up next:

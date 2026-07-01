@@ -3,15 +3,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "gpu-log-analyzer"
+name = "gpu_log_analyzer"
 version = "0.1.0"
 description = "Parse NVIDIA GPU error logs and produce diagnostic reports"
 requires-python = ">=3.9"
 dependencies = []
 
 [project.scripts]
-gpu-log-analyzer = "gpu_log_analyzer.cli:main"
-gpu-log-generator = "gpu_log_analyzer.generator:main"
+gpu_log_analyzer = "gpu_log_analyzer.cli:main"
+gpu_log_generator = "gpu_log_analyzer.generator:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]

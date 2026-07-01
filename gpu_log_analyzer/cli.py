@@ -34,7 +34,7 @@ def _summary_line(classified: list[ClassifiedIncident]) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="gpu-log-analyzer",
+        prog="gpu_log_analyzer",
         description="Parse NVIDIA GPU error logs and produce a diagnostic report.",
     )
     parser.add_argument(

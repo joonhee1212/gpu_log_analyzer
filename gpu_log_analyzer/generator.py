@@ -378,7 +378,7 @@ def main() -> None:
     import sys
 
     parser = argparse.ArgumentParser(
-        prog="gpu-log-generator",
+        prog="gpu_log_generator",
         description="Generate synthetic NVIDIA GPU error logs for testing.",
     )
     sub = parser.add_subparsers(dest="cmd")
