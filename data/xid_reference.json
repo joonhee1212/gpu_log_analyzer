@@ -1,0 +1,138 @@
+{
+  "13": {
+    "name": "Graphics Engine Exception",
+    "category": "illegal_memory_access",
+    "severity": "medium",
+    "likely_cause": "Out-of-bounds array access, illegal instruction, or illegal register access within a kernel. Rarely a hardware fault.",
+    "action": "INVESTIGATE_SOFTWARE",
+    "notes": "Run under compute-sanitizer (memcheck) or cuda-gdb to isolate the offending kernel."
+  },
+  "14": {
+    "name": "Channel Exception",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Generic channel-level error, often tied to command submission corruption.",
+    "action": "INVESTIGATE_SOFTWARE",
+    "notes": "One of the most commonly cited example Xids in NVIDIA's own docs."
+  },
+  "31": {
+    "name": "GPU Memory Page Fault",
+    "category": "illegal_memory_access",
+    "severity": "high",
+    "likely_cause": "Use-after-free, allocator race condition (e.g. competing memory pools across PyTorch/CuPy/TensorRT), or DLPack zero-copy tensor lifetime bug.",
+    "action": "INVESTIGATE_SOFTWARE",
+    "notes": "Most common 'CUDA process crashed' Xid. Message includes faulting address, engine (GRAPHICS/COPY/NVDEC), fault type (PDE/PTE), and access type."
+  },
+  "43": {
+    "name": "GPU Stopped Processing",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Driver or application-triggered stop, sometimes preceding a more specific error.",
+    "action": "INVESTIGATE_SOFTWARE",
+    "notes": "Often appears alongside other Xids as a secondary symptom."
+  },
+  "45": {
+    "name": "Preemptive Channel Removal",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "Driver reclaimed a channel, frequently after another fault or a killed process.",
+    "action": "MONITOR",
+    "notes": "Usually informational/secondary rather than root cause."
+  },
+  "48": {
+    "name": "Double Bit ECC Error (DBE)",
+    "category": "memory_ecc",
+    "severity": "critical",
+    "likely_cause": "Uncorrectable DRAM cell degradation. Two bits flipped in the same memory word; ECC can detect but not correct.",
+    "action": "RESET_GPU",
+    "notes": "Corrupts any data in that location (e.g. training gradients). Can cascade into Xid 31 if it hits page tables. If recurring, RMA the GPU."
+  },
+  "54": {
+    "name": "Power Cable Issue",
+    "category": "thermal_power",
+    "severity": "high",
+    "likely_cause": "Auxiliary power cable unplugged or seated poorly.",
+    "action": "CHECK_HARDWARE",
+    "notes": "Visible directly via nvidia-smi power-cable status field."
+  },
+  "63": {
+    "name": "ECC Row Remapping Pending",
+    "category": "memory_ecc",
+    "severity": "medium",
+    "likely_cause": "A memory row has accumulated enough single-bit errors to require remapping; remap is pending a GPU reset.",
+    "action": "RESET_GPU",
+    "notes": "Introduced with A100+ row-remap error recovery, replacing older dynamic page retirement."
+  },
+  "64": {
+    "name": "ECC Row Remapping Failure",
+    "category": "memory_ecc",
+    "severity": "critical",
+    "likely_cause": "Row remap could not be applied successfully, indicating deeper memory degradation.",
+    "action": "RMA_HARDWARE",
+    "notes": "Escalate directly; this is a stronger signal than Xid 63."
+  },
+  "74": {
+    "name": "NVLink Error",
+    "category": "nvlink_nvswitch",
+    "severity": "high",
+    "likely_cause": "Link-level failure between GPUs or GPU-to-NVSwitch, e.g. training a multi-GPU job with degraded interconnect.",
+    "action": "CHECK_FABRIC",
+    "notes": "Cluster-level issue — investigate the fabric/switch, not just the single reporting GPU."
+  },
+  "79": {
+    "name": "GPU Has Fallen Off the Bus",
+    "category": "gpu_fallen_off_bus",
+    "severity": "critical",
+    "likely_cause": "GPU became unresponsive on the PCIe bus, often due to power, thermal, seating, or hardware failure.",
+    "action": "RESET_GPU",
+    "notes": "Frequently requires a physical reseat or node reboot if reset doesn't recover it. Can also appear as multiline log entries without an explicit Xid tag."
+  },
+  "95": {
+    "name": "Uncontained Error / Multi-App Containment Failure",
+    "category": "memory_ecc",
+    "severity": "critical",
+    "likely_cause": "An error (often ECC-related) affected multiple applications sharing the GPU and was not successfully contained.",
+    "action": "RESET_GPU",
+    "notes": "Affected GPU must be reset before any new applications can run on it."
+  },
+  "119": {
+    "name": "GSP RPC Timeout",
+    "category": "gsp_firmware_error",
+    "severity": "high",
+    "likely_cause": "The GPU System Processor (GSP) microcontroller failed to respond to a driver RPC call in time.",
+    "action": "RESET_GPU",
+    "notes": "Uncommon outside of hardware failure. If persistent, revert recent hardware changes and cold-reset the system."
+  },
+  "120": {
+    "name": "GSP Error",
+    "category": "gsp_firmware_error",
+    "severity": "high",
+    "likely_cause": "An error occurred in code running on the GPU's GSP core.",
+    "action": "RESET_GPU",
+    "notes": "Often paired with Xid 119 in logs."
+  },
+  "144": {
+    "name": "NVLink5 Fatal Link Event",
+    "category": "nvlink_nvswitch",
+    "severity": "critical",
+    "likely_cause": "Fatal-severity NVLink5 fabric error (e.g. NETIR_LINK_EVT subcode) on newer NVLink5-generation interconnects.",
+    "action": "CHECK_FABRIC",
+    "notes": "New error family (Xids 144-150) for NVLink5 hardware. Carries extended subcode/severity/link-number fields in the log line — tooling support is still sparse, worth prioritizing."
+  },
+  "154": {
+    "name": "GPU Recovery Action Required",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Driver has determined a specific recovery action is needed for the GPU.",
+    "action": "CHECK_RECOVERY_ACTION",
+    "notes": "Visible via nvidia-smi's GPU Recovery Action field; pair with nvidia-smi output when parsing."
+  },
+  "0": {
+    "name": "Unknown / Unmapped Xid",
+    "category": "unknown_uncategorized",
+    "severity": "unknown",
+    "likely_cause": "Xid code not present in this reference table.",
+    "action": "MANUAL_LOOKUP",
+    "notes": "Fallback entry. Consult NVIDIA's full Xid catalog (docs.nvidia.com/deploy/xid-errors) or nverror.h in open-gpu-kernel-modules for the definitive list."
+  }
+}

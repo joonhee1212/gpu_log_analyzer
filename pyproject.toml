@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "gpu-log-analyzer"
+version = "0.1.0"
+description = "Parse NVIDIA GPU error logs and produce diagnostic reports"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+gpu-log-analyzer = "gpu_log_analyzer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gpu_log_analyzer*"]
+
+[tool.setuptools.package-data]
+gpu_log_analyzer = []
