@@ -149,7 +149,11 @@ Fields:
 | `driver_software` | 8, 11, 14, 16, 25, 32, 37–41, 43–45, 56, 60, 65–69, 73, 78, 93, 109, 121, 151, 154, 156–157, 159–161 |
 | `unknown_uncategorized` | fallback (key `0`) |
 
-**Attribution:** the reference table was built from [NVIDIA's official Xid error documentation](https://docs.nvidia.com/deploy/xid-errors/index.html) and expanded using NVIDIA's official Xid catalog, cross-referenced against real log samples. This is not an official NVIDIA file. The authoritative source is NVIDIA's docs and `nverror.h` in [open-gpu-kernel-modules](https://github.com/NVIDIA/open-gpu-kernel-modules).
+**Attribution:** the reference table was built from NVIDIA's official Xid Catalog:
+- Docs page: [Analyzing the Xid Catalog](https://docs.nvidia.com/deploy/xid-errors/analyzing-xid-catalog.html)
+- Direct download: [Xid-Catalog.xlsx](https://docs.nvidia.com/deploy/xid-errors/_downloads/4586dadb59119a55d1e93a181caa4272/Xid-Catalog.xlsx)
+
+Fields from the spreadsheet were mapped to this schema and enriched with operational context cross-referenced against real log samples. This is not an official NVIDIA file. The authoritative source is NVIDIA's docs and `nverror.h` in [open-gpu-kernel-modules](https://github.com/NVIDIA/open-gpu-kernel-modules). See `data/nvidia_xid_catalog_attribution.md` for full provenance details.
 
 ---
 
@@ -165,7 +169,8 @@ gpu_log_analyzer/
   models.py       # dataclasses: XidEvent, Incident, ClassifiedEvent, ClassifiedIncident
 
 data/
-  xid_reference.json   # Xid code -> name/severity/category/action/notes (67 codes)
+  xid_reference.json                  # Xid code -> name/severity/category/action/notes (67 codes)
+  nvidia_xid_catalog_attribution.md   # provenance: source URLs and mapping notes
 
 samples/real/
   incident1_first_occurrence.log   # real Xid 79 -> 154 burst
