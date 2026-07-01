@@ -3,10 +3,13 @@ Parser tests against both synthetic fixtures and the real sample logs.
 """
 from __future__ import annotations
 
+import random
 from collections import Counter
 from pathlib import Path
 
 import pytest
+
+from datetime import datetime
 
 from gpu_log_analyzer.classifier import load_xid_reference
 from gpu_log_analyzer.generator import (
@@ -17,7 +20,7 @@ from gpu_log_analyzer.generator import (
     single_code_file,
     _TimestampCursor,
 )
-from gpu_log_analyzer.parser import parse_file
+from gpu_log_analyzer.parser import parse_file, INCIDENT_GAP_SECS
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 SAMPLES_DIR = Path(__file__).parent.parent / "samples" / "real"
@@ -144,6 +147,64 @@ def test_kitchen_sink_all_incidents_same_gpu():
     assert len(pci_addrs) == 1
     assert len(uuids) == 1
     assert None not in uuids
+
+
+# --- INCIDENT_GAP_SECS boundary tests ---
+#
+# The 61/62 escalation sample uses dmesg format, so its timestamps never go through
+# _parse_ts_for_gap — the gap is invisible to the parser and both Xids land in the
+# same incident. The tests below document that known behavior, then separately test
+# the actual gap boundary using iso8601 format where gap detection runs.
+
+SYNTHETIC_DIR = Path(__file__).parent.parent / "samples" / "synthetic"
+
+
+def test_61_62_escalation_is_one_incident_two_events():
+    """dmesg timestamps aren't parseable, so the 12s gap between Xid 61 and 62
+    bypasses INCIDENT_GAP_SECS entirely — both land in one incident as two events."""
+    incidents = parse_file(SYNTHETIC_DIR / "xid_061_062_microcontroller_escalation.log")
+    assert len(incidents) == 1, "dmesg-format gap should not split into two incidents"
+    xids = [ev.xid for ev in incidents[0].events]
+    assert xids == [61, 62], f"expected [61, 62] in order, got {xids}"
+
+
+def _two_burst_iso8601(tmp_path, gap_secs: int) -> list:
+    """Helper: write a file with two Xid 61 bursts on the same GPU separated by gap_secs,
+    using iso8601 format so the parser can actually measure the gap."""
+    rng = random.Random(99)
+    gpu = make_gpu(rng=rng)
+    base = datetime(2026, 5, 1, 12, 0, 0)
+    cursor = _TimestampCursor(base, "iso8601")
+    lines = generate_burst(61, gpu, cursor, rng, add_154_followup=False)
+    cursor.advance(gap_secs)
+    lines.extend(generate_burst(61, gpu, cursor, rng, include_uuid_line=False, add_154_followup=False))
+    p = tmp_path / "gap_test.log"
+    p.write_text("\n".join(lines) + "\n")
+    return parse_file(p)
+
+
+def test_gap_within_threshold_is_same_incident(tmp_path):
+    """Gap well inside INCIDENT_GAP_SECS should be treated as the same incident.
+    Note: the measured gap is advance_secs + burst noise duration (sub-second ticks),
+    so testing at exactly INCIDENT_GAP_SECS is ambiguous — use a value clearly under."""
+    incidents = _two_burst_iso8601(tmp_path, gap_secs=INCIDENT_GAP_SECS - 2)
+    assert len(incidents) == 1, (
+        f"gap of {INCIDENT_GAP_SECS - 2}s should stay as one incident, got {len(incidents)}"
+    )
+
+
+def test_gap_over_threshold_is_new_incident(tmp_path):
+    """Gap over INCIDENT_GAP_SECS should open a new incident."""
+    incidents = _two_burst_iso8601(tmp_path, gap_secs=INCIDENT_GAP_SECS + 1)
+    assert len(incidents) == 2, (
+        f"gap of {INCIDENT_GAP_SECS + 1}s should split into two incidents, got {len(incidents)}"
+    )
+
+
+def test_gap_well_over_threshold_is_new_incident(tmp_path):
+    """Large gap (1 hour) should always produce two separate incidents."""
+    incidents = _two_burst_iso8601(tmp_path, gap_secs=3600)
+    assert len(incidents) == 2
 
 
 # --- real sample log regression tests ---

@@ -138,9 +138,18 @@ Fields:
 | `action` | Recommended first action |
 | `notes` | Extra context — caveats, related errors, operational tips |
 
-Error categories: `memory_ecc`, `illegal_memory_access`, `gpu_fallen_off_bus`, `gsp_firmware_error`, `nvlink_nvswitch`, `thermal_power`, `driver_software`, `unknown_uncategorized`.
+| Category | Codes covered |
+|---|---|
+| `memory_ecc` | 48, 63, 64, 92, 94, 95, 140, 171, 172 |
+| `illegal_memory_access` | 6, 13, 31 |
+| `gpu_fallen_off_bus` | 79, 80 |
+| `gsp_firmware_error` | 46, 61, 62, 110, 119, 120, 143, 158 |
+| `nvlink_nvswitch` | 74, 136, 137, 144–150, 155 |
+| `thermal_power` | 54 |
+| `driver_software` | 8, 11, 14, 16, 25, 32, 37–41, 43–45, 56, 60, 65–69, 73, 78, 93, 109, 121, 151, 154, 156–157, 159–161 |
+| `unknown_uncategorized` | fallback (key `0`) |
 
-**Attribution:** the reference table was built from [NVIDIA's official Xid error documentation](https://docs.nvidia.com/deploy/xid-errors/index.html) and cross-referenced against real log samples. This is not an official NVIDIA file. The authoritative source is NVIDIA's docs and `nverror.h` in [open-gpu-kernel-modules](https://github.com/NVIDIA/open-gpu-kernel-modules).
+**Attribution:** the reference table was built from [NVIDIA's official Xid error documentation](https://docs.nvidia.com/deploy/xid-errors/index.html) and expanded using NVIDIA's official Xid catalog, cross-referenced against real log samples. This is not an official NVIDIA file. The authoritative source is NVIDIA's docs and `nverror.h` in [open-gpu-kernel-modules](https://github.com/NVIDIA/open-gpu-kernel-modules).
 
 ---
 
@@ -156,7 +165,7 @@ gpu_log_analyzer/
   models.py       # dataclasses: XidEvent, Incident, ClassifiedEvent, ClassifiedIncident
 
 data/
-  xid_reference.json   # Xid code -> name/severity/category/action/notes (33 codes)
+  xid_reference.json   # Xid code -> name/severity/category/action/notes (67 codes)
 
 samples/real/
   incident1_first_occurrence.log   # real Xid 79 -> 154 burst
@@ -173,7 +182,7 @@ tests/
 
 ## Known limitations
 
-- **~33 Xid codes covered.** NVIDIA documents 200+ Xid codes; unknown ones fall back to a generic "Unknown / Unmapped Xid" entry. See the [full NVIDIA Xid catalog](https://docs.nvidia.com/deploy/xid-errors/index.html) to add more.
+- **~67 Xid codes covered.** NVIDIA documents 200+ Xid codes; unknown ones fall back to a generic "Unknown / Unmapped Xid" entry. See the [full NVIDIA Xid catalog](https://docs.nvidia.com/deploy/xid-errors/index.html) to add more.
 - **Static file input only.** Live `dmesg -w` streaming is not supported yet.
 - **Syslog timestamps have no year.** Logs in `Feb 03 01:53:05` format are stored and displayed as-is; the year is not inferred. Chronological sorting within the same year still works correctly.
 - **dmesg-only files can't separate multiple incidents.** dmesg timestamps are boot-relative floats (`[ 142.881234]`), not wall-clock datetimes, so the incident gap detector can't compute time differences between them. Two separate incidents in a dmesg-only file will be merged into one. This will be fixed when live `dmesg` streaming support is added (requires a numeric gap-comparison path separate from the datetime one).
@@ -184,7 +193,7 @@ tests/
 ## Roadmap
 
 Done:
-- [x] Xid reference table — 33 codes across 7 categories, built from NVIDIA's official docs
+- [x] Xid reference table — 67 codes across 7 categories, expanded from NVIDIA's official catalog
 - [x] Parser — handles ISO8601, syslog, and dmesg timestamp formats; groups multi-line bursts into incidents; collapses `message repeated N times`; detects recurrence across files
 - [x] Classifier — enriches each Xid with name/severity/category/action from the reference table; unknown codes fall back gracefully
 - [x] Report generator — grouped by GPU, sorted chronologically, recurrence flagged inline and summarized at the bottom
@@ -193,7 +202,7 @@ Done:
 - [x] Test suite — 32 tests covering parser, classifier, all fixture formats, recurrence detection, and real sample regression
 
 Up next:
-- **More Xid coverage** — expand toward full NVIDIA catalog (200+ codes)
+- **More Xid coverage** — 67/200+ codes covered; gap is mostly in obscure/legacy codes
 - **Markdown / HTML report output** — `--format md` or `--format html` flag
 - **Live dmesg streaming** — `--follow` mode; also fixes dmesg-only multi-incident gap detection
 - **`nvidia-smi` correlation** — pair Xid 154 (recovery action) with live `nvidia-smi` output to surface the actual recovery state

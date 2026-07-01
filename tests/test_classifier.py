@@ -18,8 +18,10 @@ SAMPLES_DIR = Path(__file__).parent.parent / "samples" / "real"
 
 _VALID_SEVERITIES = {"low", "medium", "high", "critical", "unknown"}
 _VALID_ACTIONS = {
-    "INVESTIGATE_SOFTWARE", "MONITOR", "RESET_GPU", "RMA_HARDWARE",
-    "CHECK_HARDWARE", "CHECK_FABRIC", "CHECK_RECOVERY_ACTION", "MANUAL_LOOKUP",
+    "INVESTIGATE_SOFTWARE", "MONITOR", "IGNORE", "RESET_GPU", "RMA_HARDWARE",
+    "RESTART_APP", "RESTART_VM", "CHECK_HARDWARE", "CHECK_MECHANICALS",
+    "CHECK_FABRIC", "CHECK_RECOVERY_ACTION", "CHECK_UVM",
+    "UPDATE_SWFW", "MANUAL_LOOKUP",
 }
 
 
@@ -31,7 +33,7 @@ def ref():
 # --- reference table tests ---
 
 def test_reference_loads(ref):
-    assert len(ref) >= 33   # 33 real codes + fallback; will only grow
+    assert len(ref) >= 67   # 67 real codes + fallback; will only grow
 
 
 def test_all_codes_have_required_fields(ref):
@@ -88,12 +90,12 @@ def test_all_fixtures_classify_non_fallback(ref):
 @pytest.mark.parametrize("xid,expected_category,expected_action", [
     (79,  "gpu_fallen_off_bus",   "RESET_GPU"),
     (48,  "memory_ecc",           "RESET_GPU"),
-    (31,  "illegal_memory_access","INVESTIGATE_SOFTWARE"),
+    (31,  "illegal_memory_access","RESTART_APP"),
     (119, "gsp_firmware_error",   "RESET_GPU"),
     (74,  "nvlink_nvswitch",      "CHECK_FABRIC"),
     (64,  "memory_ecc",           "RMA_HARDWARE"),
-    (54,  "thermal_power",        "CHECK_HARDWARE"),
-    (45,  "driver_software",      "MONITOR"),
+    (54,  "thermal_power",        "CHECK_MECHANICALS"),
+    (45,  "driver_software",      "IGNORE"),
 ])
 def test_specific_xid_category_and_action(xid, expected_category, expected_action, ref):
     path = FIXTURE_DIR / f"xid_{xid:03d}.log"

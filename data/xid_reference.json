@@ -1,4 +1,12 @@
 {
+  "0": {
+    "name": "Unknown / Unmapped Xid",
+    "category": "unknown_uncategorized",
+    "severity": "unknown",
+    "likely_cause": "Xid code not present in this reference table.",
+    "action": "MANUAL_LOOKUP",
+    "notes": "Fallback entry. Consult NVIDIA's full Xid catalog (docs.nvidia.com/deploy/xid-errors) or nverror.h in open-gpu-kernel-modules for the definitive list."
+  },
   "6": {
     "name": "Hardware Exception (MMU Fault)",
     "category": "illegal_memory_access",
@@ -11,16 +19,16 @@
     "name": "GPU Stopped Processing",
     "category": "driver_software",
     "severity": "medium",
-    "likely_cause": "GPU execution halted, almost always as a downstream consequence of another fault rather than a root cause itself.",
-    "action": "INVESTIGATE_SOFTWARE",
+    "likely_cause": "Idle timeout on a FIFO channel.",
+    "action": "RESTART_APP",
     "notes": "Rarely actionable on its own — diagnose the root cause Xid first. Appears alongside more specific errors as a secondary symptom."
   },
   "11": {
-    "name": "PBDMA Error",
+    "name": "Invalid/Corrupted Push Buffer Stream",
     "category": "driver_software",
     "severity": "medium",
-    "likely_cause": "Push buffer DMA (PBDMA) engine error, typically from a corrupted or invalid command stream submitted by the driver or application.",
-    "action": "INVESTIGATE_SOFTWARE",
+    "likely_cause": "Corrupted or invalid command stream sent to the GPU.",
+    "action": "RESTART_APP",
     "notes": "Can be triggered by application bugs writing invalid GPU commands, or driver issues. If recurring without an obvious software cause, may point to a hardware problem with the command processor."
   },
   "13": {
@@ -28,16 +36,16 @@
     "category": "illegal_memory_access",
     "severity": "medium",
     "likely_cause": "Out-of-bounds array access, illegal instruction, or illegal register access within a kernel. Rarely a hardware fault.",
-    "action": "INVESTIGATE_SOFTWARE",
-    "notes": "Run under compute-sanitizer (memcheck) or cuda-gdb to isolate the offending kernel."
+    "action": "RESTART_APP",
+    "notes": "Run under compute-sanitizer (memcheck) or cuda-gdb, or set CUDA_DEVICE_WAITS_ON_EXCEPTION=1."
   },
   "14": {
-    "name": "Channel Exception",
+    "name": "Fake/Injected Error",
     "category": "driver_software",
-    "severity": "medium",
-    "likely_cause": "Generic channel-level error, often tied to command submission corruption.",
-    "action": "INVESTIGATE_SOFTWARE",
-    "notes": "One of the most commonly cited example Xids in NVIDIA's own docs."
+    "severity": "low",
+    "likely_cause": "Injected error from userspace, not a real fault.",
+    "action": "IGNORE",
+    "notes": "Deprecated/unused on most modern setups; harmless if seen."
   },
   "16": {
     "name": "Display Engine Error",
@@ -47,60 +55,116 @@
     "action": "MONITOR",
     "notes": "Usually benign on compute/server nodes with no display attached. If a display is connected and this causes instability, check cable and display hardware."
   },
+  "25": {
+    "name": "Invalid/Illegal Push Buffer Stream",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Illegal command stream sent to the GPU.",
+    "action": "RESTART_APP",
+    "notes": "Check application/CUDA usage if it recurs."
+  },
   "31": {
     "name": "GPU Memory Page Fault",
     "category": "illegal_memory_access",
     "severity": "high",
     "likely_cause": "Use-after-free, allocator race condition (e.g. competing memory pools across PyTorch/CuPy/TensorRT), or DLPack zero-copy tensor lifetime bug.",
-    "action": "INVESTIGATE_SOFTWARE",
-    "notes": "Most common 'CUDA process crashed' Xid. Message includes faulting address, engine (GRAPHICS/COPY/NVDEC), fault type (PDE/PTE), and access type."
+    "action": "RESTART_APP",
+    "notes": "Run under compute-sanitizer (memcheck) or cuda-gdb, or set CUDA_DEVICE_WAITS_ON_EXCEPTION=1. Message includes faulting address, engine (GRAPHICS/COPY/NVDEC), fault type (PDE/PTE), and access type."
   },
   "32": {
-    "name": "Invalid or Corrupted Push Buffer Stream",
+    "name": "Invalid/Corrupted Push Buffer Stream (PBDMA)",
     "category": "driver_software",
     "severity": "medium",
-    "likely_cause": "The GPU received a command stream it could not parse — either an application bug writing invalid commands, or memory corruption affecting the command buffer.",
-    "action": "INVESTIGATE_SOFTWARE",
-    "notes": "Run the offending workload under compute-sanitizer to catch memory corruption early. If this appears without a user process running, suspect driver or firmware corruption."
+    "likely_cause": "PBDMA DMA controller fault managing driver-to-GPU communication over PCIe. Usually a PCIe quality issue rather than app-caused, but can also be triggered by application bugs writing invalid commands.",
+    "action": "RESTART_APP",
+    "notes": "Run the offending workload under compute-sanitizer to catch memory corruption early. If this appears without a user process running, suspect PCIe link quality or driver corruption."
   },
-  "38": {
-    "name": "Driver Firmware Error",
-    "category": "driver_software",
-    "severity": "high",
-    "likely_cause": "An error occurred in the GPU driver firmware (RM firmware). Can follow a GSP-RM fault or indicate a driver/firmware version mismatch.",
-    "action": "RESET_GPU",
-    "notes": "Try a clean driver reinstall if this appears after a driver upgrade. If it persists across driver versions on the same hardware, consider RMA."
-  },
-  "43": {
-    "name": "GPU Stopped Processing",
-    "category": "driver_software",
-    "severity": "medium",
-    "likely_cause": "Driver or application-triggered stop, sometimes preceding a more specific error.",
-    "action": "INVESTIGATE_SOFTWARE",
-    "notes": "Often appears alongside other Xids as a secondary symptom."
-  },
-  "45": {
-    "name": "Preemptive Channel Removal",
+  "37": {
+    "name": "Driver Firmware Error (FECS Method)",
     "category": "driver_software",
     "severity": "low",
-    "likely_cause": "Driver reclaimed a channel, frequently after another fault or a killed process.",
-    "action": "MONITOR",
-    "notes": "Usually informational/secondary rather than root cause."
+    "likely_cause": "FECS firmware method issue.",
+    "action": "IGNORE",
+    "notes": "Check application/CUDA if recurring."
+  },
+  "38": {
+    "name": "Driver Firmware Error (FECS Watchdog)",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "FECS watchdog timeout; can also follow a GSP-RM fault or indicate a driver/firmware version mismatch.",
+    "action": "IGNORE",
+    "notes": "Try a clean driver reinstall if this appears after a driver upgrade. If it persists across driver versions on the same hardware, consider RMA. Contact support if recurring."
+  },
+  "39": {
+    "name": "Copy Engine Exception",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Fault on a GPU copy engine.",
+    "action": "RESTART_APP",
+    "notes": "Contact support if recurring."
+  },
+  "40": {
+    "name": "Copy Engine Exception",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Fault on a GPU copy engine.",
+    "action": "RESTART_APP",
+    "notes": "Contact support if recurring."
+  },
+  "41": {
+    "name": "Copy Engine Exception",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Fault on a GPU copy engine.",
+    "action": "RESTART_APP",
+    "notes": "Contact support if recurring."
+  },
+  "43": {
+    "name": "GPU Stopped Processing (Verif Error)",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "User application software-induced fault; GPU remains healthy.",
+    "action": "IGNORE",
+    "notes": "Usually a user app error, not a driver bug. Often appears alongside other Xids as a secondary symptom."
+  },
+  "44": {
+    "name": "Graphics Engine Fault During Context Switch",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Fault while switching GPU contexts.",
+    "action": "IGNORE",
+    "notes": "Contact support if recurring."
+  },
+  "45": {
+    "name": "Preemptive Channel Cleanup",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "Driver tore down a GPU app after abort (Ctrl-C, GPU reset, sigkill) or a preceding DBE.",
+    "action": "IGNORE",
+    "notes": "Often a user/system action, not a bug. Frequently seen alongside Xid 94/95."
+  },
+  "46": {
+    "name": "GPU Stopped Processing (Timeout)",
+    "category": "gsp_firmware_error",
+    "severity": "high",
+    "likely_cause": "GPU timeout error.",
+    "action": "RESET_GPU",
+    "notes": "Contact support if recurring."
   },
   "48": {
     "name": "Double Bit ECC Error (DBE)",
     "category": "memory_ecc",
     "severity": "critical",
-    "likely_cause": "Uncorrectable DRAM cell degradation. Two bits flipped in the same memory word; ECC can detect but not correct.",
+    "likely_cause": "Uncorrectable DRAM cell degradation; two bits flipped in the same memory word — ECC can detect but not correct.",
     "action": "RESET_GPU",
-    "notes": "Corrupts any data in that location (e.g. training gradients). Can cascade into Xid 31 if it hits page tables. If recurring, RMA the GPU."
+    "notes": "Corrupts any data in that location (e.g. training gradients); can cascade into Xid 31 if it hits page tables. GPU reset or node reboot required. Check nvidia-smi for SRAM DBE threshold; RMA if exceeded."
   },
   "54": {
-    "name": "Power Cable Issue",
+    "name": "Auxiliary Power Not Connected",
     "category": "thermal_power",
     "severity": "high",
     "likely_cause": "Auxiliary power cable unplugged or seated poorly.",
-    "action": "CHECK_HARDWARE",
+    "action": "CHECK_MECHANICALS",
     "notes": "Visible directly via nvidia-smi power-cable status field."
   },
   "56": {
@@ -111,6 +175,14 @@
     "action": "MONITOR",
     "notes": "Commonly appears immediately after Xid 79 as a secondary effect — the display driver tries to query state from a lost GPU and fails. Not a root cause on its own."
   },
+  "60": {
+    "name": "Video Processor Exception (SEC2)",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "SEC2 video processor fault.",
+    "action": "RESTART_APP",
+    "notes": "Investigate software if recurring."
+  },
   "61": {
     "name": "Internal Micro-controller Error",
     "category": "gsp_firmware_error",
@@ -120,20 +192,20 @@
     "notes": "Often a precursor to or companion of Xid 62 (micro-controller halt). If repeated, try updating driver/firmware; if persistent, treat as potential hardware failure."
   },
   "62": {
-    "name": "Internal Micro-controller Halt",
+    "name": "Internal Micro-controller Halt (PMU)",
     "category": "gsp_firmware_error",
     "severity": "critical",
-    "likely_cause": "The GPU's internal micro-controller stopped executing entirely — more severe than Xid 61 (error without halt).",
+    "likely_cause": "The GPU's PMU micro-controller stopped executing entirely — more severe than Xid 61 (error without halt).",
     "action": "RESET_GPU",
-    "notes": "Full halt typically requires a GPU reset or node reboot to recover. If Xid 61 precedes this, treat 61 as the leading indicator to watch."
+    "notes": "Full halt typically requires a GPU reset or node reboot to recover. If Xid 61 precedes this, treat 61 as the leading indicator to watch. Contact support if recurring."
   },
   "63": {
     "name": "ECC Row Remapping Pending",
     "category": "memory_ecc",
     "severity": "medium",
-    "likely_cause": "A memory row has accumulated enough single-bit errors to require remapping; remap is pending a GPU reset.",
-    "action": "RESET_GPU",
-    "notes": "Introduced with A100+ row-remap error recovery, replacing older dynamic page retirement."
+    "likely_cause": "Memory row accumulated enough single-bit errors to require remapping; remap is pending a GPU reset.",
+    "action": "IGNORE",
+    "notes": "Row remap on Ampere+, replacing dynamic page retirement on pre-Ampere hardware. Not urgent by itself but schedule a GPU reset."
   },
   "64": {
     "name": "ECC Row Remapping Failure",
@@ -144,20 +216,44 @@
     "notes": "Escalate directly; this is a stronger signal than Xid 63."
   },
   "65": {
-    "name": "Video Processor Exception",
+    "name": "Video Processor Exception (NVDEC/NVENC)",
     "category": "driver_software",
     "severity": "medium",
     "likely_cause": "Exception in the video decode/encode processor, usually from invalid input data, unsupported codec parameters, or an application bug in the video pipeline.",
     "action": "INVESTIGATE_SOFTWARE",
     "notes": "Affects NVDEC/NVENC workloads. Check the application's codec configuration and input stream validity. Unlikely to be hardware unless Xid 48 or 79 appear alongside."
   },
+  "66": {
+    "name": "Illegal Access by Driver",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "FECS register access violation.",
+    "action": "IGNORE",
+    "notes": "Investigate software if recurring."
+  },
+  "67": {
+    "name": "Illegal Access by Driver (Verif)",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "FECS verification violation.",
+    "action": "IGNORE",
+    "notes": "Contact support if recurring."
+  },
   "68": {
-    "name": "NVDEC Error",
+    "name": "NVDEC0 Exception",
     "category": "driver_software",
     "severity": "medium",
     "likely_cause": "Hardware video decoder (NVDEC) encountered an error — typically from a malformed bitstream, unsupported decode configuration, or resource exhaustion.",
-    "action": "INVESTIGATE_SOFTWARE",
+    "action": "RESTART_APP",
     "notes": "Validate the input video stream. NVDEC errors are almost always software or data issues rather than hardware faults, unless accompanied by ECC or bus errors."
+  },
+  "69": {
+    "name": "Graphics Engine Class Error",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Graphics engine class-level fault.",
+    "action": "RESTART_APP",
+    "notes": "Check application/CUDA if recurring."
   },
   "73": {
     "name": "NVENC Error",
@@ -171,9 +267,17 @@
     "name": "NVLink Error",
     "category": "nvlink_nvswitch",
     "severity": "high",
-    "likely_cause": "Link-level failure between GPUs or GPU-to-NVSwitch, e.g. training a multi-GPU job with degraded interconnect.",
+    "likely_cause": "Link-level failure between GPUs or GPU-to-NVSwitch.",
     "action": "CHECK_FABRIC",
-    "notes": "Cluster-level issue — investigate the fabric/switch, not just the single reporting GPU."
+    "notes": "GPU reset or node reboot needed. Use nvidia-smi nvlink for details. If a remote GPU fails, this GPU may report Xid 74 as a side effect. Cluster-level issue — investigate the fabric/switch, not just the single reporting GPU."
+  },
+  "78": {
+    "name": "vGPU Start Error",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Virtual GPU failed to start.",
+    "action": "UPDATE_SWFW",
+    "notes": "Check vGPU software/firmware versions."
   },
   "79": {
     "name": "GPU Has Fallen Off the Bus",
@@ -184,28 +288,44 @@
     "notes": "Frequently requires a physical reseat or node reboot if reset doesn't recover it. Can also appear as multiline log entries without an explicit Xid tag."
   },
   "80": {
-    "name": "Bar1 Mapping Error",
+    "name": "Corrupted Data Sent to GPU",
     "category": "gpu_fallen_off_bus",
     "severity": "high",
-    "likely_cause": "The GPU's BAR1 PCIe address space (used for direct CPU-to-VRAM access) became inaccessible, indicating PCIe link instability, GPU power loss, or a seating issue.",
+    "likely_cause": "PBDMA pushbuffer CRC mismatch; PCIe-layer data corruption closely related to Xid 79.",
     "action": "CHECK_HARDWARE",
-    "notes": "BAR1 loss effectively makes the GPU unresponsive to the host. Often co-occurs with or precedes Xid 79. Check PCIe slot seating and power connectors."
+    "notes": "Check PCIe slot seating and power connectors. Often co-occurs with or precedes Xid 79."
+  },
+  "92": {
+    "name": "High Single-Bit ECC Error Rate",
+    "category": "memory_ecc",
+    "severity": "low",
+    "likely_cause": "Excessive but individually-correctable single-bit ECC errors.",
+    "action": "IGNORE",
+    "notes": "Monitor; contact support if rate keeps climbing."
+  },
+  "93": {
+    "name": "InfoROM Erase Limit Exceeded",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "Driver failed to update InfoROM due to a wear-limit violation set intentionally via NVFlash.",
+    "action": "IGNORE",
+    "notes": "Usually intentional wear protection, not a failure. Recover via nvflash --elsessionclear."
   },
   "94": {
     "name": "Contained ECC Error",
     "category": "memory_ecc",
-    "severity": "high",
-    "likely_cause": "An ECC error was successfully contained to a single application — other apps sharing the GPU were not affected.",
-    "action": "RESET_GPU",
-    "notes": "Counterpart to Xid 95 (uncontained). The offending app must be killed and the GPU reset, but other workloads can continue until then. Recurring Xid 94 is a strong signal to investigate the memory hardware."
+    "severity": "medium",
+    "likely_cause": "GPU error containment (A100+) kept the fault scoped to one app; other apps sharing the GPU were not affected.",
+    "action": "RESTART_APP",
+    "notes": "Restart the affected app; other apps on the GPU are unaffected. Reset GPU when convenient. Recurring Xid 94 is a strong signal to investigate the memory hardware. Often paired with Xid 45."
   },
   "95": {
     "name": "Uncontained Error / Multi-App Containment Failure",
     "category": "memory_ecc",
     "severity": "critical",
-    "likely_cause": "An error (often ECC-related) affected multiple applications sharing the GPU and was not successfully contained.",
+    "likely_cause": "Same error family as Xid 94, but the fault affected multiple applications sharing the GPU.",
     "action": "RESET_GPU",
-    "notes": "Affected GPU must be reset before any new applications can run on it."
+    "notes": "GPU must be reset before any new applications can run on it."
   },
   "109": {
     "name": "Context Switch Timeout",
@@ -215,13 +335,21 @@
     "action": "RESET_GPU",
     "notes": "Often the first visible sign that a GPU is becoming unresponsive before a full Xid 79. If Xid 109 precedes Xid 79 in the logs, treat 109 as the early warning indicator."
   },
+  "110": {
+    "name": "Security Fault Error",
+    "category": "gsp_firmware_error",
+    "severity": "high",
+    "likely_cause": "Uncommon unless there is a hardware failure.",
+    "action": "RESET_GPU",
+    "notes": "Revert recent hardware changes and cold-reset. Contact hardware vendor if it persists."
+  },
   "119": {
     "name": "GSP RPC Timeout",
     "category": "gsp_firmware_error",
     "severity": "high",
-    "likely_cause": "The GPU System Processor (GSP) microcontroller failed to respond to a driver RPC call in time.",
+    "likely_cause": "GPU System Processor (GSP) failed to respond to a driver RPC call in time.",
     "action": "RESET_GPU",
-    "notes": "Uncommon outside of hardware failure. If persistent, revert recent hardware changes and cold-reset the system."
+    "notes": "Uncommon outside of hardware failure. If persistent, revert recent hardware changes and cold-reset the system. GPU reset or node power cycle may be needed."
   },
   "120": {
     "name": "GSP Error",
@@ -231,29 +359,109 @@
     "action": "RESET_GPU",
     "notes": "Often paired with Xid 119 in logs."
   },
+  "121": {
+    "name": "C2C Error",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "Corrected errors on the C2C NVLink connection to a Grace CPU.",
+    "action": "IGNORE",
+    "notes": "System-corrected, no operational impact. Reset GPU at a convenient window to retrain the link."
+  },
+  "136": {
+    "name": "Link Training Failed",
+    "category": "nvlink_nvswitch",
+    "severity": "high",
+    "likely_cause": "NVLink/PCIe link training failure.",
+    "action": "RESET_GPU",
+    "notes": "Investigate link signal integrity if recurring."
+  },
+  "137": {
+    "name": "NVLink Privilege Error",
+    "category": "nvlink_nvswitch",
+    "severity": "medium",
+    "likely_cause": "Illegal NVLink peer-to-peer access reported by the remote MMU.",
+    "action": "IGNORE",
+    "notes": "Typically an app-level bug; can be a driver/hardware bug. Debug like Xid 31."
+  },
+  "140": {
+    "name": "ECC Unrecovered Error",
+    "category": "memory_ecc",
+    "severity": "critical",
+    "likely_cause": "Uncorrectable GPU memory errors interrupted the driver's ability to mark pages for offlining/remapping.",
+    "action": "RESET_GPU",
+    "notes": "Reset GPU; contact hardware vendor if it persists."
+  },
   "143": {
     "name": "GSP Assert / Sanity Check Failure",
     "category": "gsp_firmware_error",
     "severity": "high",
     "likely_cause": "An internal assertion or sanity check failed inside the GSP firmware, usually triggered by unexpected state from a prior error.",
     "action": "RESET_GPU",
-    "notes": "Usually secondary noise after Xid 79 or 119 rather than a root cause. The assertion message in the log (function name and source file) can help NVIDIA support pinpoint the firmware path that failed."
+    "notes": "Usually secondary noise after Xid 79 or 119 rather than a root cause. The assertion message in the log can help NVIDIA support pinpoint the firmware path that failed."
   },
   "144": {
-    "name": "NVLink5 Fatal Link Event",
+    "name": "NVLink5 SAW Error",
     "category": "nvlink_nvswitch",
     "severity": "critical",
-    "likely_cause": "Fatal-severity NVLink5 fabric error (e.g. NETIR_LINK_EVT subcode) on newer NVLink5-generation interconnects.",
+    "likely_cause": "Fatal NVLink5-generation fabric error (SAW subcode) on B100/GB200 hardware.",
     "action": "CHECK_FABRIC",
-    "notes": "New error family (Xids 144-150) for NVLink5 hardware. Carries extended subcode/severity/link-number fields in the log line — tooling support is still sparse, worth prioritizing."
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware. Carries extended subcode/severity/link-number fields in the log line."
   },
   "145": {
-    "name": "NVLink5 Non-Fatal Link Event",
+    "name": "NVLink5 RLW Error",
     "category": "nvlink_nvswitch",
-    "severity": "high",
-    "likely_cause": "A non-fatal severity link event on NVLink5 interconnect — indicates link degradation or transient fault that did not immediately drop the link.",
+    "severity": "critical",
+    "likely_cause": "NVLink5-generation fabric error (RLW subcode) on B100/GB200 hardware.",
     "action": "CHECK_FABRIC",
-    "notes": "Softer sibling to Xid 144. Even non-fatal events can degrade interconnect bandwidth and precede a full link failure. Monitor frequency; escalate if rate is increasing."
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware. Even individual events can degrade interconnect bandwidth; monitor frequency."
+  },
+  "146": {
+    "name": "NVLink5 TLW Error",
+    "category": "nvlink_nvswitch",
+    "severity": "critical",
+    "likely_cause": "NVLink5-generation fabric error (TLW subcode) on B100/GB200 hardware.",
+    "action": "CHECK_FABRIC",
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware (B100/GB200)."
+  },
+  "147": {
+    "name": "NVLink5 TREX Error",
+    "category": "nvlink_nvswitch",
+    "severity": "critical",
+    "likely_cause": "NVLink5-generation fabric error (TREX subcode) on B100/GB200 hardware.",
+    "action": "CHECK_FABRIC",
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware (B100/GB200)."
+  },
+  "148": {
+    "name": "NVLink5 NVLPW_CTRL Error",
+    "category": "nvlink_nvswitch",
+    "severity": "critical",
+    "likely_cause": "NVLink5-generation fabric error (NVLPW_CTRL subcode) on B100/GB200 hardware.",
+    "action": "CHECK_FABRIC",
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware (B100/GB200)."
+  },
+  "149": {
+    "name": "NVLink5 NETIR Error",
+    "category": "nvlink_nvswitch",
+    "severity": "critical",
+    "likely_cause": "NVLink5-generation fabric error (NETIR subcode) on B100/GB200 hardware.",
+    "action": "CHECK_FABRIC",
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware (B100/GB200)."
+  },
+  "150": {
+    "name": "NVLink5 MSE Error",
+    "category": "nvlink_nvswitch",
+    "severity": "critical",
+    "likely_cause": "NVLink5-generation fabric error (MSE subcode) on B100/GB200 hardware.",
+    "action": "CHECK_FABRIC",
+    "notes": "New error family (Xid 144-150) for NVLink5 hardware (B100/GB200)."
+  },
+  "151": {
+    "name": "Key Rotation Error",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "vGPU key rotation failure.",
+    "action": "RESTART_VM",
+    "notes": "Contact support if recurring."
   },
   "154": {
     "name": "GPU Recovery Action Required",
@@ -261,14 +469,78 @@
     "severity": "medium",
     "likely_cause": "Driver has determined a specific recovery action is needed for the GPU.",
     "action": "CHECK_RECOVERY_ACTION",
-    "notes": "Visible via nvidia-smi's GPU Recovery Action field; pair with nvidia-smi output when parsing."
+    "notes": "Seen alongside other Xids; summarizes required recovery (None / Drain P2P / Drain and Reset / GPU Reset Required / Node Reboot Required). Visible via nvidia-smi's GPU Recovery Action field; pair with nvidia-smi output when parsing."
   },
-  "0": {
-    "name": "Unknown / Unmapped Xid",
-    "category": "unknown_uncategorized",
-    "severity": "unknown",
-    "likely_cause": "Xid code not present in this reference table.",
-    "action": "MANUAL_LOOKUP",
-    "notes": "Fallback entry. Consult NVIDIA's full Xid catalog (docs.nvidia.com/deploy/xid-errors) or nverror.h in open-gpu-kernel-modules for the definitive list."
+  "155": {
+    "name": "NVLink Software-Defined Error",
+    "category": "nvlink_nvswitch",
+    "severity": "high",
+    "likely_cause": "Intentional link-down event (including transition to SLEEP).",
+    "action": "RESET_GPU",
+    "notes": "Investigate software/user action if unexpected."
+  },
+  "156": {
+    "name": "Resource Retirement Event",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "A GPU resource was retired due to a fault.",
+    "action": "RESET_GPU",
+    "notes": "Informational unless repeated."
+  },
+  "157": {
+    "name": "Resource Retirement Failure",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Resource retirement could not be applied due to lack of resources.",
+    "action": "IGNORE",
+    "notes": "No repair possible; workloads may still run but the Xid may recur."
+  },
+  "158": {
+    "name": "GPU Fatal Timeout",
+    "category": "gsp_firmware_error",
+    "severity": "critical",
+    "likely_cause": "Fatal timeout condition on the GPU.",
+    "action": "RESET_GPU",
+    "notes": "Contact support if recurring."
+  },
+  "159": {
+    "name": "CHI Non-Data Error",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "Non-data protocol error on a C2C-linked GPU.",
+    "action": "CHECK_UVM",
+    "notes": "May be seen on any C2C link-connected GPU."
+  },
+  "160": {
+    "name": "Channel Retirement Event",
+    "category": "driver_software",
+    "severity": "low",
+    "likely_cause": "A GPU channel was retired.",
+    "action": "IGNORE",
+    "notes": "Investigate software if recurring."
+  },
+  "161": {
+    "name": "Channel Retirement Failure",
+    "category": "driver_software",
+    "severity": "medium",
+    "likely_cause": "Channel retirement could not be applied.",
+    "action": "IGNORE",
+    "notes": "Investigate software if recurring."
+  },
+  "171": {
+    "name": "Uncorrectable DRAM Error",
+    "category": "memory_ecc",
+    "severity": "critical",
+    "likely_cause": "Supplementary detail to Xid 48, specifically identifying DRAM as the fault location.",
+    "action": "RESET_GPU",
+    "notes": "Companion event to Xid 48."
+  },
+  "172": {
+    "name": "Uncorrectable SRAM Error",
+    "category": "memory_ecc",
+    "severity": "critical",
+    "likely_cause": "Supplementary detail to Xid 48, specifically identifying SRAM as the fault location.",
+    "action": "RESET_GPU",
+    "notes": "Companion event to Xid 48."
   }
 }
