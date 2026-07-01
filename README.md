@@ -148,35 +148,52 @@ Error categories: `memory_ecc`, `illegal_memory_access`, `gpu_fallen_off_bus`, `
 
 ```
 gpu_log_analyzer/
-  cli.py          # argparse entry point, wires everything together
+  cli.py          # gpu-log-analyzer entry point, wires parse -> classify -> report
+  generator.py    # gpu-log-generator entry point, synthetic log generation
   parser.py       # regex + state machine, produces Incident objects
   classifier.py   # looks up each Xid in xid_reference.json
   reporter.py     # formats ClassifiedIncident list as plain text
   models.py       # dataclasses: XidEvent, Incident, ClassifiedEvent, ClassifiedIncident
 
 data/
-  xid_reference.json   # Xid code -> name/severity/category/action/notes
+  xid_reference.json   # Xid code -> name/severity/category/action/notes (33 codes)
 
 samples/real/
   incident1_first_occurrence.log   # real Xid 79 -> 154 burst
   incident2_recurrence.log         # same GPU, same fault, ~11 hours later
+
+tests/
+  conftest.py          # generates synthetic fixtures at session start
+  test_parser.py       # 20 parser tests (formats, grouping, recurrence, real samples)
+  test_classifier.py   # 12 classifier tests (reference table, enrichment, fallback)
+  fixtures/            # generated at test time, not checked in
 ```
 
 ---
 
 ## Known limitations
 
-- **~16 Xid codes covered.** The reference table is a starting scaffold. NVIDIA documents 200+ Xid codes; unknown ones fall back to a generic "Unknown / Unmapped Xid" entry. See the [full NVIDIA Xid catalog](https://docs.nvidia.com/deploy/xid-errors/index.html) to add more.
+- **~33 Xid codes covered.** NVIDIA documents 200+ Xid codes; unknown ones fall back to a generic "Unknown / Unmapped Xid" entry. See the [full NVIDIA Xid catalog](https://docs.nvidia.com/deploy/xid-errors/index.html) to add more.
 - **Static file input only.** Live `dmesg -w` streaming is not supported yet.
 - **Syslog timestamps have no year.** Logs in `Feb 03 01:53:05` format are stored and displayed as-is; the year is not inferred. Chronological sorting within the same year still works correctly.
+- **dmesg-only files can't separate multiple incidents.** dmesg timestamps are boot-relative floats (`[ 142.881234]`), not wall-clock datetimes, so the incident gap detector can't compute time differences between them. Two separate incidents in a dmesg-only file will be merged into one. This will be fixed when live `dmesg` streaming support is added (requires a numeric gap-comparison path separate from the datetime one).
 - **Tested on two real log excerpts.** Other GPU models, driver versions, or log formats may surface parsing edge cases.
 
 ---
 
 ## Roadmap
 
-- **Synthetic log generator** — produce realistic fake logs for testing without requiring real hardware or redacted logs
-- **More Xid coverage** — expand `xid_reference.json` toward full NVIDIA catalog coverage
+Done:
+- [x] Xid reference table — 33 codes across 7 categories, built from NVIDIA's official docs
+- [x] Parser — handles ISO8601, syslog, and dmesg timestamp formats; groups multi-line bursts into incidents; collapses `message repeated N times`; detects recurrence across files
+- [x] Classifier — enriches each Xid with name/severity/category/action from the reference table; unknown codes fall back gracefully
+- [x] Report generator — grouped by GPU, sorted chronologically, recurrence flagged inline and summarized at the bottom
+- [x] CLI — `gpu-log-analyzer` entry point; multi-file input; `--output` flag
+- [x] Synthetic log generator — `gpu-log-generator` entry point; single-code and kitchen-sink modes; all three timestamp formats; realistic noise/burst structure
+- [x] Test suite — 32 tests covering parser, classifier, all fixture formats, recurrence detection, and real sample regression
+
+Up next:
+- **More Xid coverage** — expand toward full NVIDIA catalog (200+ codes)
 - **Markdown / HTML report output** — `--format md` or `--format html` flag
-- **Live dmesg streaming** — `--follow` mode, pipe-friendly
+- **Live dmesg streaming** — `--follow` mode; also fixes dmesg-only multi-incident gap detection
 - **`nvidia-smi` correlation** — pair Xid 154 (recovery action) with live `nvidia-smi` output to surface the actual recovery state

@@ -136,6 +136,10 @@ def parse_file(path: str | Path) -> list[Incident]:
                     # uptime following a syslog burst). only treat as same burst if NEITHER
                     # side has timing info; if one is parseable and the other isn't, play safe.
                     same_incident = (last_ts is None and parsed_ts is None)
+                    # TODO: dmesg-only files with multiple incidents can't be separated here
+                    # because dmesg uptime floats don't go through _parse_ts_for_gap. fix this
+                    # when adding --follow / live dmesg streaming — extract the uptime float
+                    # from the bracket and use a separate numeric gap comparison path.
 
             if not same_incident:
                 if current_incident:
